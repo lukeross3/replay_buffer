@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "replay-buffer"
+version = "0.1.0"
+description = ""
+authors = ["Luke Ross <lukeross@umich.edu>"]
+readme = "README.md"
+packages = [{include = "replay_buffer"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+numpy = "^1.24.1"
+toml = "^0.10.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

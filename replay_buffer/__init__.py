@@ -1,5 +1,10 @@
 import toml
 
+from replay_buffer.replay_buffer import (  # NOQA: F401
+    FloatReplayBuffer,
+    TimeReplayBuffer,
+)
+
 
 def get_version() -> str:
     """Get version string from project's pyproject.toml

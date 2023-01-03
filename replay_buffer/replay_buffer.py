@@ -7,15 +7,17 @@ import numpy as np
 class ReplayBufferMaster(ABC):
     dtype = float
 
-    def __init__(self, priority: Optional[np.array] = None) -> None:
+    def __init__(self, priorities: Optional[np.array] = None) -> None:
         """Initialize a replay buffer with the given priority values. If no priority
         values provided, the replay buffer is initialized as empty.
 
         Args:
-            priority (Optional[np.array], optional): An array of priority values.
+            priorities (Optional[np.array], optional): An array of priority values.
             Defaults to None.
         """
-        self.priority = np.empty(0, dtype=self.dtype) if priority is None else priority
+        self.priorities = (
+            np.empty(0, dtype=self.dtype) if priorities is None else priorities
+        )
 
     def append(self, value: Any) -> None:
         """Add a new element to the replay buffer with the given priority value. May be
@@ -24,25 +26,33 @@ class ReplayBufferMaster(ABC):
         Args:
             value (Any): Value to give the new item's priority
         """
-        self.priority = np.append(self.priority, value)
+        self.priorities = np.append(self.priorities, value)
 
-    def get_value(self, index: int) -> Any:
+    def __len__(self) -> int:
+        """Get the current length of the replay buffer
+
+        Returns:
+            int: _description_
+        """
+        return len(self.priorities)
+
+    def __getitem__(self, index: int) -> Any:
         """Get a replay buffer item's priority. May be a time, a float, etc.
 
         Args:
             index (int): Index of item to update
             value (Any): Value to give item's priority
         """
-        return self.priority[index]
+        return self.priorities[index]
 
-    def set_value(self, index: int, value: Any) -> None:
+    def __setitem__(self, index: int, value: Any) -> None:
         """Update a replay buffer item's priority. May be a time, a float, etc.
 
         Args:
             index (int): Index of item to update
             value (Any): Value to give item's priority
         """
-        self.priority[index] = value
+        self.priorities[index] = value
 
     def sample(self, c: float = 1.0) -> int:
         """Get the index of the "next" element in the replay buffer based on the
@@ -84,7 +94,7 @@ class TimeReplayBuffer(ReplayBufferMaster):
         Returns:
             int: The index of the element sampled from the replay buffer
         """
-        elapsed = np.datetime64("now") - self.priority
+        elapsed = np.datetime64("now") - self.priorities
         elapsed_seconds = elapsed / np.timedelta64(1, "s")
         normalized = elapsed_seconds / np.sum(elapsed_seconds)
         exponentiated = normalized**c
@@ -113,7 +123,7 @@ class FloatReplayBuffer(ReplayBufferMaster):
         Returns:
             int: The index of the element sampled from the replay buffer
         """
-        normalized = self.priority / np.sum(self.priority)
+        normalized = self.priorities / np.sum(self.priorities)
         exponentiated = normalized**c
         distr = exponentiated / np.sum(exponentiated)
         return np.random.choice(len(distr), p=distr)

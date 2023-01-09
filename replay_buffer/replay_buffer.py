@@ -41,7 +41,6 @@ class ReplayBufferMaster(ABC):
 
         Args:
             index (int): Index of item to update
-            value (Any): Value to give item's priority
         """
         return self.priorities[index]
 
@@ -56,7 +55,7 @@ class ReplayBufferMaster(ABC):
 
     def sample(self, c: float = 1.0) -> int:
         """Get the index of the "next" element in the replay buffer based on the
-        current priority values.
+        current probability distribution over samples.
 
         Args:
             c (float, optional): Exponent to control the sharpness of the distribution
@@ -67,6 +66,22 @@ class ReplayBufferMaster(ABC):
 
         Returns:
             int: The index of the element sampled from the replay buffer
+        """
+        distr = self.distr(c=c)
+        return np.random.choice(len(distr), p=distr)
+
+    def distr(self, c: float = 1.0) -> np.array:
+        """Get the current probability distribution over samples.
+
+        Args:
+            c (float, optional): Exponent to control the sharpness of the distribution
+            over samples. A value of 0 flattens the distribution into a uniform
+            distribution, a value of infinity shaprens the distribution into a one-hot
+            distribution, and a value of 1 leaves the distribution unchanged. Defaults
+            to 1.0.
+
+        Returns:
+            np.array: The probability distribution over samples in the replay buffer
         """
 
 
@@ -80,9 +95,8 @@ class TimeReplayBuffer(ReplayBufferMaster):
 
     dtype = np.datetime64
 
-    def sample(self, c: float = 1.0) -> int:
-        """Get the index of the "next" element in the replay buffer based on the
-        current priority values.
+    def distr(self, c: float = 1.0) -> np.array:
+        """Get the current probability distribution over samples.
 
         Args:
             c (float, optional): Exponent to control the sharpness of the distribution
@@ -92,14 +106,13 @@ class TimeReplayBuffer(ReplayBufferMaster):
             to 1.0.
 
         Returns:
-            int: The index of the element sampled from the replay buffer
+            np.array: The probability distribution over samples in the replay buffer
         """
         elapsed = np.datetime64("now") - self.priorities
         elapsed_seconds = elapsed / np.timedelta64(1, "s")
         normalized = elapsed_seconds / np.sum(elapsed_seconds)
         exponentiated = normalized**c
-        distr = exponentiated / np.sum(exponentiated)
-        return np.random.choice(len(distr), p=distr)
+        return exponentiated / np.sum(exponentiated)
 
 
 class FloatReplayBuffer(ReplayBufferMaster):
@@ -109,9 +122,8 @@ class FloatReplayBuffer(ReplayBufferMaster):
 
     dtype = np.float64
 
-    def sample(self, c: float = 1.0) -> int:
-        """Get the index of the "next" element in the replay buffer based on the
-        current priority values.
+    def distr(self, c: float = 1.0) -> np.array:
+        """Get the current probability distribution over samples.
 
         Args:
             c (float, optional): Exponent to control the sharpness of the distribution
@@ -121,9 +133,8 @@ class FloatReplayBuffer(ReplayBufferMaster):
             to 1.0.
 
         Returns:
-            int: The index of the element sampled from the replay buffer
+            np.array: The probability distribution over samples in the replay buffer
         """
         normalized = self.priorities / np.sum(self.priorities)
         exponentiated = normalized**c
-        distr = exponentiated / np.sum(exponentiated)
-        return np.random.choice(len(distr), p=distr)
+        return exponentiated / np.sum(exponentiated)

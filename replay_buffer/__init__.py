@@ -1,5 +1,6 @@
 import toml
 
+from replay_buffer.multi_buffer import MultiBuffer  # NOQA: F401
 from replay_buffer.replay_buffer import (  # NOQA: F401
     FloatReplayBuffer,
     TimeReplayBuffer,

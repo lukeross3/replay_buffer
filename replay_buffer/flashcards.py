@@ -36,6 +36,8 @@ class Flashcards:
         return self.seen[i]
 
     def next_card(self) -> None:
+        # TODO: how to know when to get old vs new? Maybe use distribution or
+        # just raw priority values
         pass
 
     def add_to_seen(
